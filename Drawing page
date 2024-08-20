@@ -1,0 +1,91 @@
+import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Drawing page ',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const DrawingPage(),
+    );
+  }
+}
+
+class DrawingPage extends StatefulWidget {
+  const DrawingPage({Key? key}) : super(key: key);
+
+  @override
+  _DrawingPageState createState() => _DrawingPageState();
+}
+
+class _DrawingPageState extends State<DrawingPage> {
+  List<Offset?> points = [];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Drawing page'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.clear),
+            onPressed: () {
+              setState(() {
+                points.clear();
+              });
+            },
+          )
+        ],
+      ),
+      body: GestureDetector(
+        onPanUpdate: (details) {
+          setState(() {
+            RenderBox renderBox = context.findRenderObject() as RenderBox;
+            points.add(renderBox.globalToLocal(details.globalPosition));
+          });
+        },
+        onPanEnd: (details) {
+          points.add(null); // It helps to break the lines
+        },
+        child: CustomPaint(
+          painter: DrawingPainter(points),
+          child: Container(),
+        ),
+      ),
+    );
+  }
+}
+
+class DrawingPainter extends CustomPainter {
+  final List<Offset?> points;
+
+  DrawingPainter(this.points);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint paint = Paint()
+      ..color = Colors.black
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 5.0;
+
+    for (int i = 0; i < points.length - 1; i++) {
+      if (points[i] != null && points[i + 1] != null) {
+        canvas.drawLine(points[i]!, points[i + 1]!, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
+  }
+}
